@@ -71,14 +71,22 @@ npm run dev
 ### Step 2: Limpyohan ang default files
 _(i-explain ni Claude ang matag file sa `client/` una sa dili pa limpyohan)_
 
-### Step 3: Home page (tagsa-tagsa nga section)
-1. Hero/Banner: title, text, "I'm Buying" / "I'm Selling" buttons, photo ni Carl
-2. Search box
-3. Featured properties: property cards (**props**, **`.map`**)
-4. Why work with me
-5. Client stories
+### Step 3: Home page (tagsa-tagsa nga section, Basic package)
+1. Hero/Banner: title, text, "I'm Buying" / "I'm Selling" buttons, photo ni Carl ✅
+2. Why work with me: cards (**props**, **`.map`**)
+3. Client stories (ipakita sa tanang pages)
+
+> Wala sa Basic: search box ug featured properties sa Home. Ang listings makita sa Buy ug Rent pages. Ang "I'm Selling" button mo-adto sa "List your property" inquiry form.
 
 ## Where I left off
+
+**Last update: 2026-11-03.** Paused at Phase 1, Step 3.2.
+
+- ✅ Step 1: React project (Vite 8, React 19) in `client/`, git repo, pushed to GitHub (`noelou/cagayanhomes`)
+- ✅ Step 2: Cleaned out the default Vite files
+- ✅ Step 3.1: Hero component (`components/Hero.jsx` + `Hero.css`), `style.css` from agent-carl copied to `index.css`
+- ⏭️ **Next: Step 3.2 "Why Work With Me"**: not started yet. Files to make: `WhyCard.jsx`, `WhyWorkWithMe.jsx`, `WhyWorkWithMe.css`, then add it to `App.jsx`. (Learn: **props**, **`.map`**, **`key`**)
+- Then: Step 3.3 Client stories
 
 - **Node study:** paused at EventEmitter. Resume at Phase 3.
 - **JS basics:** comfortable with `const`, arrow functions, template literals, `.map`, destructuring.
@@ -87,3 +95,13 @@ _(i-explain ni Claude ang matag file sa `client/` una sa dili pa limpyohan)_
 ## Notes per step
 
 <!-- Add what you learned after each step here -->
+
+### Step 3.1 Hero
+- **Component** = function nga mo-`return` og JSX. Ang `<template>` sa Vue = ang gi-return sa function.
+- **JSX** kay JavaScript, dili HTML: `className` (dili `class`), `htmlFor`, `onClick`, `src={photo}`.
+- `{ }` sa JSX = "JavaScript ni".
+- Image kay i-`import` (`import carlPhoto from '../assets/carl-prof.jpg'`).
+- Walay `<style scoped>` sa React: separate `.css` file, i-import. Global ang CSS, so gamit og BEM names (`.hero__photo`).
+
+### Step 3.2 (draft, wala pa na-type)
+- `useState`: natun-an gikan sa SearchBox example (`const [type, setType] = useState('buy')`; gamita ang `setType`, dili `type = ...`). Wala na ang SearchBox sa Basic.
