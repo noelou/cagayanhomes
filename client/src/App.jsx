@@ -1,9 +1,9 @@
-import './App.css'
+import Hero from './components/Hero.jsx'
 
 function App() {
   return (
     <div>
-      <h1>Cagayan Homes</h1>
+      <Hero />
     </div>
   )
 }
