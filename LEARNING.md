@@ -85,7 +85,9 @@ _(i-explain ni Claude ang matag file sa `client/` una sa dili pa limpyohan)_
 - ✅ Step 1: React project (Vite 8, React 19) in `client/`, git repo, pushed to GitHub (`noelou/cagayanhomes`)
 - ✅ Step 2: Cleaned out the default Vite files
 - ✅ Step 3.1: Hero component (`components/Hero.jsx` + `Hero.css`), `style.css` from agent-carl copied to `index.css`
-- ⏭️ **Next: Step 3.2 "Why Work With Me"**: not started yet. Files to make: `WhyCard.jsx`, `WhyWorkWithMe.jsx`, `WhyWorkWithMe.css`, then add it to `App.jsx`. (Learn: **props**, **`.map`**, **`key`**)
+- ⏭️ **Next: Step 3.2 "Why Work With Me"**: Part A explained (2026-11-04) but not typed yet.
+  - **Part A (props):** type `WhyCard.jsx`, `WhyWorkWithMe.jsx` (2 cards by hand), `WhyWorkWithMe.css`, then add `<WhyWorkWithMe />` to `App.jsx` under `<Hero />`
+  - **Part B (`.map` + `key`):** put the 4 cards in an array, use `.map` instead of typing `<WhyCard>` by hand
 - Then: Step 3.3 Client stories
 
 - **Node study:** paused at EventEmitter. Resume at Phase 3.
@@ -103,5 +105,11 @@ _(i-explain ni Claude ang matag file sa `client/` una sa dili pa limpyohan)_
 - Image kay i-`import` (`import carlPhoto from '../assets/carl-prof.jpg'`).
 - Walay `<style scoped>` sa React: separate `.css` file, i-import. Global ang CSS, so gamit og BEM names (`.hero__photo`).
 
-### Step 3.2 (draft, wala pa na-type)
+### Step 3.2 Why Work With Me (Part A explained, wala pa na-type)
+- **Props** = info nga ipasa sa component, like function arguments. `function WhyCard({ title, text })`, gamit `<WhyCard title="..." text="..." />`.
+- Vue `{{ title }}` ug `:src="photo"` → React `{title}` ug `src={photo}`. Ang `{ }` ra sa duha. Expressions ra (walay `if`/`for` sulod).
+- Vue `v-html` → React `dangerouslySetInnerHTML={{ __html: html }}`. Likayi (XSS risk); gamita ang `{text}` + CSS `white-space: pre-line`.
+- `&mdash;` mogana sa JSX text pero dili sa JS string. Sa string, i-type ang tinuod nga `—`.
+
+### Old notes (Step 3.2 draft)
 - `useState`: natun-an gikan sa SearchBox example (`const [type, setType] = useState('buy')`; gamita ang `setType`, dili `type = ...`). Wala na ang SearchBox sa Basic.
