@@ -1,0 +1,12 @@
+.why-card {
+    padding: 28px;
+}
+
+.why-card h3 {
+    font-size: 1.1rem;
+}
+
+.why-card p {
+    color: var(--color-text-soft);
+    margin: 0;
+}
