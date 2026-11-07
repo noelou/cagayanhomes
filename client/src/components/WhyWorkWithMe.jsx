@@ -1,6 +1,13 @@
 import WhyCard from "./WhyCard.jsx";
 import './WhyWorkWithMe.css'
 
+const reasons = [
+    { title: 'Personal Service', text: 'You work directly with me, not a call center. Every question gets a real answer.' },
+    { title: 'Local Knowledge', text: 'Years of experience in the local market means better guidance on price and location.' },
+    { title: 'Honest Guidance', text: "No pressure, no upselling — just straightforward advice about what's right for you." },
+    { title: 'End-to-End Support', text: "From your first inquiry to signing the final paperwork, I'll be with you the whole way." }
+]
+
 function WhyWorkWithMe() {
     return (
         <section className="section">
@@ -11,15 +18,9 @@ function WhyWorkWithMe() {
                           guiding you through each step from the first conversation to closing.</p>
                 </div>
                 <div className="grid grid--2 why-grid">
-                    <WhyCard 
-                        title="Personal Service"
-                        text="You work directly with me, not a call center. Every question gets a real answer."
-                    />
-                    
-                    <WhyCard 
-                        title="Local Knowledge"
-                        text="Years of experience in the local market means better guidance on price and location."
-                    />
+                    {reasons.map((reason) => (
+                        <WhyCard key={reason.title} title={reason.title} text={reason.text} />
+                    ))}
                 </div>
             </div>
         </section>
