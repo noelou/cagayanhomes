@@ -1,14 +1,19 @@
-import Hero from './components/Hero.jsx'
-import WhyWorkWithMe from './components/WhyWorkWithMe.jsx'
-import ClientStories from './components/ClientStories.jsx'
+import { Routes, Route } from 'react-router'
+import Header from './components/Header.jsx'
+import Footer from './components/Footer.jsx'
+import Home from './pages/Home.jsx'
+import About from './pages/About.jsx'
 
 function App() {
   return (
-    <div>
-      <Hero />
-      <WhyWorkWithMe />
-      <ClientStories />
-    </div>
+    <>
+      <Header />
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/about" element={<About />} />
+      </Routes>
+      <Footer />
+    </>
   )
 }
 
