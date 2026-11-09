@@ -1,0 +1,24 @@
+.testimonial {
+    padding: 24px;
+}
+
+.testimonial__stars {
+    margin-bottom: 8px;
+}
+
+.testimonial__quote {
+    color: var(--color-text-soft);
+    font-style: italic;
+}
+
+.testimonial__name {
+    font-weight: 700;
+    color: var(--color-navy);
+    margin-bottom: 0;
+}
+
+.testimonial__detail {
+    font-size: 0.85rem;
+    color: var(--color-text-soft);
+    margin-bottom: 0;
+}
