@@ -10,18 +10,11 @@
     padding: 56px 20px 32px;
 }
 
-.footer h3 {
-    color: #fff;
-    margin-bottom: 12px;
-}
-
-.footer h3 span {
+.footer__logo {
     display: block;
-    font-size: 0.65rem;
-    font-weight: 500;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: var(--color-gold);
+    height: 64px;
+    width: auto;
+    margin-bottom: 16px;
 }
 
 .footer h4 {
@@ -38,6 +31,25 @@
 
 .footer__col a:hover {
     color: var(--color-gold);
+}
+
+.footer__item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin: 0;
+}
+
+.footer__item svg {
+    flex-shrink: 0;
+    width: 18px;
+    height: 18px;
+    margin-top: 3px;
+    fill: none;
+    stroke: #fff;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
 }
 
 .footer__bottom {

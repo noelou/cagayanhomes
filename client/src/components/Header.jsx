@@ -12,8 +12,8 @@ function Header() {
     return (
         <header className="navbar">
             <div className="container navbar__inner">
-                <Link to="/" className="navbar__logo" onClick={closeMenu}>
-                    Carl <span>Real Estate</span>
+                <Link to="/" className="navbar__logo" onClick={closeMenu} aria-label="Home">
+                    <img src="/logo.png" alt="Carl Real Estate" />
                 </Link>
 
                 <button className="navbar__toggle" onClick={() => setIsOpen(!isOpen)}>
@@ -26,13 +26,12 @@ function Header() {
                     className={isOpen ? 'navbar__links navbar__links--open' : 'navbar__links'}
                     onClick={closeMenu}
                 >
-                    <NavLink to="/">Home</NavLink>
                     <NavLink to="/buy">Buy</NavLink>
                     <NavLink to="/rent">Rent</NavLink>
                     <NavLink to="/about">About Me</NavLink>
                     <NavLink to="/contact">Contact</NavLink>
-                    <Link to="/contact" className="btn btn--gold navbar__cta">
-                        📅 Book a Consultation
+                    <Link to="/contact" className="navbar__cta">
+                        Book a Call
                     </Link>
                 </nav>
             </div>
