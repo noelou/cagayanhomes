@@ -1,0 +1,48 @@
+.property-card__image {
+    display: block;
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+}
+
+.property-card__body {
+    padding: 20px;
+}
+
+.property-card__price {
+    font-family: var(--font-heading);
+    font-size: 1.4rem;
+    font-weight: 500;
+    color: var(--color-navy);
+    margin-bottom: 4px;
+}
+
+.property-card h3 {
+    font-size: 1.05rem;
+    margin-bottom: 4px;
+}
+
+.property-card__location {
+    color: var(--color-text-soft);
+    font-size: 0.9rem;
+    margin-bottom: 16px;
+}
+
+.property-card__details {
+    display: flex;
+    gap: 16px;
+    padding-top: 14px;
+    border-top: 1px solid var(--color-border);
+    font-size: 0.85rem;
+    color: var(--color-text-soft);
+}
+
+.property-card__period {
+    font-size: 0.85rem;
+    font-weight: 400;
+    color: var(--color-text-soft);
+}
+
+.property-card {
+    display: block;
+}
