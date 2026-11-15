@@ -5,7 +5,8 @@ import Home from './pages/Home.jsx'
 import About from './pages/About.jsx'
 import Buy from './pages/Buy.jsx'
 import Rent from './pages/Rent.jsx'
- import PropertyDetails from './pages/PropertyDetails.jsx'
+import PropertyDetails from './pages/PropertyDetails.jsx'
+import Contact from './pages/Contact.jsx'
 
 function App() {
   return (
@@ -17,6 +18,7 @@ function App() {
         <Route path="/buy" element={<Buy />} />
         <Route path="/rent" element={<Rent />} />
         <Route path="/property/:id" element={<PropertyDetails />} />
+        <Route path="/contact" element={<Contact />} />
       </Routes>
       <Footer />
     </>

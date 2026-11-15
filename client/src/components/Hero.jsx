@@ -11,7 +11,7 @@ function Hero() {
                 </p>
                 <div className="hero__actions">
                     <a href="/buy" className="btn btn--light">I'm Buying</a>
-                    <a href="/sell" className="btn btn--outline-light">I'm Selling</a>
+                    <a href="/contact" className="btn btn--outline-light">I'm Selling</a>
                 </div>
             </div>
         </section>

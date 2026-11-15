@@ -219,3 +219,12 @@ a {
   border-radius: 14px;
   overflow: hidden;
 }
+
+@media print {
+    .no-print,
+    .navbar,
+    .footer,
+    .gallery__thumbs {
+      display: none !important;
+    }
+  }

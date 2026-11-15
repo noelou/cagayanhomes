@@ -1,0 +1,31 @@
+
+.contact {
+display: grid;
+grid-template-columns: 1fr 1fr;
+gap: 48px;
+align-items: start;
+}
+
+.contact__info p {
+color: var(--color-text-soft);
+font-size: 1.05rem;
+}
+
+.contact__list {
+list-style: none;
+margin: 24px 0 0;
+padding: 0;
+display: grid;
+gap: 8px;
+}
+
+.contact__list a {
+color: var(--color-green);
+}
+
+@media (max-width: 768px) {
+.contact {
+    grid-template-columns: 1fr;
+    gap: 24px;
+}
+}

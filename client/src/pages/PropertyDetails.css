@@ -1,0 +1,15 @@
+.details__title {
+    margin-top: 24px;
+}
+
+.details__map {
+    margin-top: 24px;
+    border-radius: 14px;
+    overflow: hidden;
+}
+
+.details__map iframe {
+    width: 100%;
+    height: 360px;
+    border: 0;
+}

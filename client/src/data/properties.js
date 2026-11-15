@@ -4,7 +4,7 @@ export const properties = [
         title: 'Gran Europa Lessandra',
         type: 'sale',
         price: 2200000,
-        location: 'Gran Europa',
+        location: 'Gran Europa Lessandra, Cagayan de Oro',
         bedrooms: 2,
         bathrooms: 1,
         lotArea: '60 sqm',
