@@ -1,13 +1,40 @@
+import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router'
-import { properties } from '../data/properties.js'
 import PropertyGallery from '../components/PropertyGallery.jsx'
 import './PropertyDetails.css'
 
 function PropertyDetails() {
     const { id } = useParams()
-    const property = properties.find((p) => p.id === id)
+    const [property, setProperty] = useState(null)
+    const [loading, setLoading] = useState(true)
+    const [notFound, setNotFound] = useState(false)
 
-    if(!property) {
+    useEffect(() => {
+        async function loadProperty() {
+            const res = await fetch(`/api/properties/${id}`)
+            if (res.status === 404) {
+                setNotFound(true)
+                setLoading(false)
+                return
+            }
+            const data = await res.json()
+            setProperty(data)
+            setLoading(false)
+        }
+        loadProperty()
+    }, [id])
+
+    if(loading) {
+        return(
+            <section className="section">
+              <div className="container">
+                  <p>Loading property...</p>
+              </div>
+            </section>
+        ) 
+    }
+
+    if(notFound) {
         return(
             <section className="section">
                 <div className="container">
