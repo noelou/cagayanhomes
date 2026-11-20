@@ -3,6 +3,7 @@ import express from 'express'
 import pool from './db.js'
 import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
+import { randomUUID } from 'node:crypto'
 
 const app = express()
 const PORT = 5000
@@ -25,6 +26,74 @@ app.get('/api/properties/:id', async (req, res) => {
 
     if (result.rows.length === 0) {
         return res.status(404).json({message: 'Property Not Found'})
+    }
+
+    res.json(result.rows[0])
+})
+
+app.delete('/api/properties/:id', requireAdmin, async (req, res) => {
+    const result = await pool.query(
+        'DELETE FROM properties WHERE id = $1 RETURNING id',
+        [req.params.id]
+    )
+
+    if (result.rows.length === 0) {
+        return res.status(404).json({ message: 'Property Not Found' })
+    }
+
+    res.json({ message: 'Deleted', id: result.rows[0].id })
+})
+
+app.post('/api/properties', requireAdmin, async (req, res) => {
+    const p = req.body
+
+    if (!p.title || !p.location || !p.price || !['sale', 'rent'].includes(p.type)) {
+        return res.status(400).json({ message: 'title, type (sale/rent), price and location are required' })
+    }
+
+    const id = randomUUID()
+
+    const result = await pool.query(
+        `INSERT INTO properties
+        (id, title, type, price, location, bedrooms, bathrooms,
+            lot_area, floor_area, bed_frame, sofa_set, refrigerator, map_query)
+        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
+        RETURNING ${COLUMNS}`,
+        [
+            id, p.title, p.type, p.price, p.location, p.bedrooms, p.bathrooms,
+            p.lotArea, p.floorArea, p.bedFrame, p.sofaSet, p.refrigerator, p.mapQuery,
+        ]
+    )
+
+    res.status(201).json(result.rows[0])
+})
+
+app.put('/api/properties/:id', requireAdmin, async (req, res) => {
+    const p = req.body
+
+    if (!p.title || !p.location || !p.price || !['sale', 'rent'].includes(p.type)) {
+        return res.status(400).json({ message: 'title, type (sale/rent), price and location are required' })
+    }
+
+    const result = await pool.query(
+        `UPDATE properties SET
+            title = $1, type = $2, price = $3, location = $4,
+            bedrooms = $5, bathrooms = $6, lot_area = $7, floor_area = $8,
+            bed_frame = COALESCE($9, bed_frame),
+            sofa_set = COALESCE($10, sofa_set),
+            refrigerator = COALESCE($11, refrigerator),
+            map_query = COALESCE($12, map_query)
+        WHERE id = $13
+        RETURNING ${COLUMNS}`,
+        [
+            p.title, p.type, p.price, p.location, p.bedrooms, p.bathrooms,
+            p.lotArea, p.floorArea, p.bedFrame, p.sofaSet, p.refrigerator, p.mapQuery,
+            req.params.id,
+        ]
+    )
+
+    if (result.rows.length === 0) {
+        return res.status(404).json({ message: 'Property Not Found' })
     }
 
     res.json(result.rows[0])
