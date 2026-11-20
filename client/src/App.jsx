@@ -7,6 +7,9 @@ import Buy from './pages/Buy.jsx'
 import Rent from './pages/Rent.jsx'
 import PropertyDetails from './pages/PropertyDetails.jsx'
 import Contact from './pages/Contact.jsx'
+import AdminLogin from './pages/AdminLogin.jsx'
+import Admin from './pages/Admin.jsx'
+import ProtectedRoute from './components/ProtectedRoute.jsx'
 
 function App() {
   return (
@@ -19,6 +22,8 @@ function App() {
         <Route path="/rent" element={<Rent />} />
         <Route path="/property/:id" element={<PropertyDetails />} />
         <Route path="/contact" element={<Contact />} />
+        <Route path="/admin/login" element={<AdminLogin />} />
+        <Route path="/admin" element={<ProtectedRoute><Admin /></ProtectedRoute>} />
       </Routes>
       <Footer />
     </>
