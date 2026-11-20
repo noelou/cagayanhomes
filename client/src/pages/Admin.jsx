@@ -12,6 +12,7 @@ function Admin() {
     const [properties, setProperties] = useState([])
     const [form, setForm] = useState(emptyForm)
     const [editingId, setEditingId] = useState(null)
+    const [showForm, setShowForm] = useState(false)
     const [files, setFiles] = useState([])
     const [fileKey, setFileKey] = useState(0)
 
@@ -61,11 +62,19 @@ function Admin() {
             lotArea: p.lotArea ?? '',
             floorArea: p.floorArea ?? '',
         })
+        setShowForm(true)
     }
 
     function handleCancel() {
         setEditingId(null)
         setForm(emptyForm)
+        setShowForm(false)
+    }
+
+    function handleAdd() {
+        setEditingId(null)
+        setForm(emptyForm)
+        setShowForm(true)
     }
 
     function replaceProperty(updated) {
@@ -167,6 +176,7 @@ function Admin() {
         setForm(emptyForm)
 
         setFiles([])
+        setShowForm(false)
         setFileKey(fileKey + 1)
     }
 
@@ -180,83 +190,90 @@ function Admin() {
                     <button onClick={handleLogout} className="btn btn--outline">Log out</button>
                 </div>
 
-                {editingId && <div className="modal__backdrop" onClick={handleCancel}></div>}
-                <div className={editingId ? 'admin__card admin__card--modal' : 'admin__card'}>
-                    <h2>{editingId ? 'Edit listing' : 'Add listing'}</h2>
-                    <form onSubmit={handleSubmit} className="contact__form">
-                        <div className="field field--wide">
-                            <label htmlFor="title">Title</label>
-                            <input id="title" name="title" value={form.title} onChange={handleChange} required />
-                        </div>
-                        <div className="field field--wide">
-                            <label htmlFor="type">Type</label>
-                            <select id="type" name="type" value={form.type} onChange={handleChange}>
-                                <option value="sale">For sale</option>
-                                <option value="rent">For rent</option>
-                            </select>
-                        </div>
-                        <div className="field field--wide">
-                            <label htmlFor="price">Price (₱)</label>
-                            <input id="price" type="number" name="price" value={form.price} onChange={handleChange} required />
-                        </div>
-                        <div className="field field--wide">
-                            <label htmlFor="location">Location</label>
-                            <input id="location" name="location" value={form.location} onChange={handleChange} required />
-                        </div>
-                        <div className="field field--wide">
-                            <label htmlFor="bedrooms">Bedrooms</label>
-                            <input id="bedrooms" type="number" name="bedrooms" value={form.bedrooms} onChange={handleChange} />
-                        </div>
-                        <div className="field field--wide">
-                            <label htmlFor="bathrooms">Bathrooms</label>
-                            <input id="bathrooms" type="number" name="bathrooms" value={form.bathrooms} onChange={handleChange} />
-                        </div>
-                        <div className="field field--wide">
-                            <label htmlFor="lotArea">Lot area</label>
-                            <input id="lotArea" name="lotArea" value={form.lotArea} onChange={handleChange} />
-                        </div>
-                        <div className="field">
-                            <label htmlFor="floorArea">Floor area</label>
-                            <input id="floorArea" name="floorArea" value={form.floorArea} onChange={handleChange} />
-                        </div>
-                        {editing && editing.images?.length > 0 && (
-                            <div className="field--wide photo-grid">
-                                {editing.images.map((url) => (
-                                    <div key={url} className="photo-grid__item">
-                                        <img src={url} alt="" />
-                                        {url === editing.thumbnail ? (
-                                            <span className="photo-grid__cover">Cover</span>
-                                        ) : (
-                                            <button type="button" onClick={() => handleMakeCover(url)}>Make cover</button>
-                                        )}
-                                        <button type="button" className="photo-grid__remove" onClick={() => handleRemovePhoto(url)}>✕</button>
-                                    </div>
-                                ))}
+                {showForm && (
+                <>
+                    <div className="modal__backdrop" onClick={handleCancel}></div>
+                    <div className="admin__card admin__card--modal">
+                        <h2>{editingId ? 'Edit listing' : 'Add listing'}</h2>
+                        <form onSubmit={handleSubmit} className="contact__form">
+                            <div className="field field--wide">
+                                <label htmlFor="title">Title</label>
+                                <input id="title" name="title" value={form.title} onChange={handleChange} required />
                             </div>
-                        )}
-                        <div className="field field--wide">
-                            <label htmlFor="photos">Photos</label>
-                            <input
-                                key={fileKey}
-                                id="photos"
-                                type="file"
-                                accept="image/*"
-                                multiple
-                                onChange={(e) => setFiles([...e.target.files])}
-                            />
-                        </div>
-                        <button type="submit" className="btn btn--primary">
-                            {editingId ? 'Save changes' : 'Add listing'}
-                        </button>
-                        {editingId && (
-                            <button type="button" onClick={handleCancel} className="btn btn--outline">
-                                Cancel
-                            </button>
-                        )}
-                    </form>
-                </div>
+                            <div className="field field--wide">
+                                <label htmlFor="type">Type</label>
+                                <select id="type" name="type" value={form.type} onChange={handleChange}>
+                                    <option value="sale">For sale</option>
+                                    <option value="rent">For rent</option>
+                                </select>
+                            </div>
+                            <div className="field field--wide">
+                                <label htmlFor="price">Price (₱)</label>
+                                <input id="price" type="number" name="price" value={form.price} onChange={handleChange} required />
+                            </div>
+                            <div className="field field--wide">
+                                <label htmlFor="location">Location</label>
+                                <input id="location" name="location" value={form.location} onChange={handleChange} required />
+                            </div>
+                            <div className="field field--wide">
+                                <label htmlFor="bedrooms">Bedrooms</label>
+                                <input id="bedrooms" type="number" name="bedrooms" value={form.bedrooms} onChange={handleChange} />
+                            </div>
+                            <div className="field field--wide">
+                                <label htmlFor="bathrooms">Bathrooms</label>
+                                <input id="bathrooms" type="number" name="bathrooms" value={form.bathrooms} onChange={handleChange} />
+                            </div>
+                            <div className="field field--wide">
+                                <label htmlFor="lotArea">Lot area</label>
+                                <input id="lotArea" name="lotArea" value={form.lotArea} onChange={handleChange} />
+                            </div>
+                            <div className="field">
+                                <label htmlFor="floorArea">Floor area</label>
+                                <input id="floorArea" name="floorArea" value={form.floorArea} onChange={handleChange} />
+                            </div>
+                            {editing && editing.images?.length > 0 && (
+                                <div className="field--wide photo-grid">
+                                    {editing.images.map((url) => (
+                                        <div key={url} className="photo-grid__item">
+                                            <img src={url} alt="" />
+                                            {url === editing.thumbnail ? (
+                                                <span className="photo-grid__cover">Cover</span>
+                                            ) : (
+                                                <button type="button" onClick={() => handleMakeCover(url)}>Make cover</button>
+                                            )}
+                                            <button type="button" className="photo-grid__remove" onClick={() => handleRemovePhoto(url)}>✕</button>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                            <div className="field field--wide">
+                                <label htmlFor="photos">Photos</label>
+                                <input
+                                    key={fileKey}
+                                    id="photos"
+                                    type="file"
+                                    accept="image/*"
+                                    multiple
+                                    onChange={(e) => setFiles([...e.target.files])}
+                                />
+                            </div>
+                            <div className="admin__buttons">
+                                <button type="submit" className="btn btn--primary">
+                                    {editingId ? 'Save changes' : 'Add listing'}
+                                </button>
+                                <button type="button" onClick={handleCancel} className="btn btn--outline">
+                                    Cancel
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </>
+                )}
 
-                <h2>Listings</h2>
+                <div className="admin__bar">
+                    <h2>Listings</h2>
+                    <button onClick={handleAdd} className="btn btn--primary">+ Add listing</button>
+                </div>
                 <ul className="admin__list">
                     {properties.map((p) => (
                         <li key={p.id} className="admin__row">
