@@ -1,3 +1,6 @@
+import multer from 'multer'
+import sharp from 'sharp'
+import fs from 'node:fs/promises'
 import requireAdmin from './auth.js'
 import express from 'express'
 import pool from './db.js'
@@ -8,6 +11,13 @@ import { randomUUID } from 'node:crypto'
 const app = express()
 const PORT = 5000
 app.use(express.json())
+app.use('/uploads', express.static('uploads'))
+
+const upload = multer({
+    storage: multer.memoryStorage(),
+    limits: { fileSize: 10 * 1024 * 1024 },
+    fileFilter: (req, file, cb) => cb(null, file.mimetype.startsWith('image/')),
+})
 
 app.get('/api/hello', (req, res) => {
     res.json({message: 'Hello from the server'})
@@ -40,6 +50,8 @@ app.delete('/api/properties/:id', requireAdmin, async (req, res) => {
     if (result.rows.length === 0) {
         return res.status(404).json({ message: 'Property Not Found' })
     }
+
+    await fs.rm(`uploads/${result.rows[0].id}`, { recursive: true, force: true })
 
     res.json({ message: 'Deleted', id: result.rows[0].id })
 })
@@ -94,6 +106,95 @@ app.put('/api/properties/:id', requireAdmin, async (req, res) => {
 
     if (result.rows.length === 0) {
         return res.status(404).json({ message: 'Property Not Found' })
+    }
+
+    res.json(result.rows[0])
+})
+
+app.post('/api/properties/:id/photos', requireAdmin, upload.array('photos', 10), async (req, res) => {
+    const id = req.params.id
+
+    const found = await pool.query('SELECT id FROM properties WHERE id = $1', [id])
+    if (found.rows.length === 0) {
+        return res.status(404).json({ message: 'Property Not Found' })
+    }
+
+    if (!req.files || req.files.length === 0) {
+        return res.status(400).json({ message: 'No image files received' })
+    }
+
+    const folder = `uploads/${id}`
+    await fs.mkdir(folder, { recursive: true })
+
+    const urls = []
+    for (const file of req.files) {
+        const name = `${randomUUID()}.webp`
+        await sharp(file.buffer)
+            .rotate()
+            .resize({ width: 1600, withoutEnlargement: true })
+            .webp({ quality: 80 })
+            .toFile(`${folder}/${name}`)
+        urls.push(`/uploads/${id}/${name}`)
+    }
+
+    const result = await pool.query(
+        `UPDATE properties SET
+            images = COALESCE(images, '{}') || $1::text[],
+            thumbnail = COALESCE(thumbnail, $2)
+        WHERE id = $3
+        RETURNING ${COLUMNS}`,
+        [urls, urls[0], id]
+    )
+
+    res.status(201).json(result.rows[0])
+})
+
+app.delete('/api/properties/:id/photos', requireAdmin, async (req, res) => {
+    const id = req.params.id
+    const url = req.query.url
+
+    const found = await pool.query(
+        'SELECT images, thumbnail FROM properties WHERE id = $1',
+        [id]
+    )
+    if (found.rows.length === 0) {
+        return res.status(404).json({ message: 'Property Not Found' })
+    }
+
+    const images = found.rows[0].images || []
+    const thumbnail = found.rows[0].thumbnail
+
+    if (!images.includes(url)) {
+        return res.status(404).json({ message: 'Photo not found' })
+    }
+
+    const remaining = images.filter((u) => u !== url)
+    const newThumbnail = thumbnail === url ? (remaining[0] ?? null) : thumbnail
+
+    const result = await pool.query(
+        `UPDATE properties SET images = $1, thumbnail = $2
+        WHERE id = $3
+        RETURNING ${COLUMNS}`,
+        [remaining, newThumbnail, id]
+    )
+
+    if (url.startsWith(`/uploads/${id}/`)) {
+        await fs.rm(`.${url}`, { force: true })
+    }
+
+    res.json(result.rows[0])
+})
+
+app.put('/api/properties/:id/cover', requireAdmin, async (req, res) => {
+    const result = await pool.query(
+        `UPDATE properties SET thumbnail = $1
+        WHERE id = $2 AND $1 = ANY(images)
+        RETURNING ${COLUMNS}`,
+        [req.body.url, req.params.id]
+    )
+
+    if (result.rows.length === 0) {
+        return res.status(404).json({ message: 'Photo not found for this listing' })
     }
 
     res.json(result.rows[0])

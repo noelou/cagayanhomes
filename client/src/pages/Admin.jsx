@@ -12,6 +12,8 @@ function Admin() {
     const [properties, setProperties] = useState([])
     const [form, setForm] = useState(emptyForm)
     const [editingId, setEditingId] = useState(null)
+    const [files, setFiles] = useState([])
+    const [fileKey, setFileKey] = useState(0)
 
     useEffect(() => {
         async function loadProperties() {
@@ -66,6 +68,47 @@ function Admin() {
         setForm(emptyForm)
     }
 
+    function replaceProperty(updated) {
+      setProperties(properties.map((p) => (p.id === updated.id ? updated : p)))
+    }
+
+    async function handleRemovePhoto(url) {
+        if (!confirm('Remove this photo?')) return
+
+        const res = await fetch(
+            `/api/properties/${editingId}/photos?url=${encodeURIComponent(url)}`,
+            {
+                method: 'DELETE',
+                headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+            }
+        )
+
+        if (!res.ok) {
+            alert('Could not remove the photo.')
+            return
+        }
+
+        replaceProperty(await res.json())
+    }
+
+    async function handleMakeCover(url) {
+        const res = await fetch(`/api/properties/${editingId}/cover`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${localStorage.getItem('token')}`,
+            },
+            body: JSON.stringify({ url }),
+        })
+
+        if (!res.ok) {
+            alert('Could not change the cover photo.')
+            return
+        }
+
+        replaceProperty(await res.json())
+    }
+
     async function handleSubmit(e) {
         e.preventDefault()
 
@@ -93,7 +136,26 @@ function Admin() {
             return
         }
 
-        const saved = await res.json()
+        let saved = await res.json()
+
+        if (files.length > 0) {
+            const data = new FormData()
+            for (const f of files) {
+                data.append('photos', f)
+            }
+
+            const photoRes = await fetch(`/api/properties/${saved.id}/photos`, {
+                method: 'POST',
+                headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+                body: data,
+            })
+
+            if (photoRes.ok) {
+                saved = await photoRes.json()
+            } else {
+                alert('Listing saved, but the photos could not be uploaded.')
+            }
+        }
 
         if (editingId) {
             setProperties(properties.map((p) => (p.id === editingId ? saved : p)))
@@ -103,7 +165,12 @@ function Admin() {
 
         setEditingId(null)
         setForm(emptyForm)
+
+        setFiles([])
+        setFileKey(fileKey + 1)
     }
+
+    const editing = properties.find((p) => p.id === editingId)
 
     return (
         <section className="section">
@@ -152,6 +219,32 @@ function Admin() {
                             <label htmlFor="floorArea">Floor area</label>
                             <input id="floorArea" name="floorArea" value={form.floorArea} onChange={handleChange} />
                         </div>
+                        {editing && editing.images?.length > 0 && (
+                            <div className="field--wide photo-grid">
+                                {editing.images.map((url) => (
+                                    <div key={url} className="photo-grid__item">
+                                        <img src={url} alt="" />
+                                        {url === editing.thumbnail ? (
+                                            <span className="photo-grid__cover">Cover</span>
+                                        ) : (
+                                            <button type="button" onClick={() => handleMakeCover(url)}>Make cover</button>
+                                        )}
+                                        <button type="button" className="photo-grid__remove" onClick={() => handleRemovePhoto(url)}>✕</button>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                        <div className="field field--wide">
+                            <label htmlFor="photos">Photos</label>
+                            <input
+                                key={fileKey}
+                                id="photos"
+                                type="file"
+                                accept="image/*"
+                                multiple
+                                onChange={(e) => setFiles([...e.target.files])}
+                            />
+                        </div>
                         <button type="submit" className="btn btn--primary">
                             {editingId ? 'Save changes' : 'Add listing'}
                         </button>
@@ -167,11 +260,14 @@ function Admin() {
                 <ul className="admin__list">
                     {properties.map((p) => (
                         <li key={p.id} className="admin__row">
-                            <div>
-                                <strong>{p.title}</strong>
-                                <span className="admin__meta">
-                                    {p.type} · ₱{p.price.toLocaleString()}
-                                </span>
+                            <div className="admin__info">
+                                {p.thumbnail && <img src={p.thumbnail} alt="" className="admin__thumb" />}
+                                <div>
+                                    <strong>{p.title}</strong>
+                                    <span className="admin__meta">
+                                        {p.type} · ₱{p.price.toLocaleString()}
+                                    </span>
+                                </div>
                             </div>
                             <div className="admin__actions">
                                 <button onClick={() => handleEdit(p)} className="btn btn--outline">Edit</button>
