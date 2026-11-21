@@ -68,12 +68,12 @@ app.post('/api/properties', requireAdmin, async (req, res) => {
     const result = await pool.query(
         `INSERT INTO properties
         (id, title, type, price, location, bedrooms, bathrooms,
-            lot_area, floor_area, bed_frame, sofa_set, refrigerator, map_query)
-        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
-        RETURNING ${COLUMNS}`,
+            lot_area, floor_area, bed_frame, sofa_set, refrigerator, map_query, seller_phone)
+        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13, $14)
+        RETURNING ${ADMIN_COLUMNS}`,
         [
             id, p.title, p.type, p.price, p.location, p.bedrooms, p.bathrooms,
-            p.lotArea, p.floorArea, p.bedFrame, p.sofaSet, p.refrigerator, p.mapQuery,
+            p.lotArea, p.floorArea, p.bedFrame, p.sofaSet, p.refrigerator, p.mapQuery, p.sellerPhone
         ]
     )
 
@@ -94,12 +94,14 @@ app.put('/api/properties/:id', requireAdmin, async (req, res) => {
             bed_frame = COALESCE($9, bed_frame),
             sofa_set = COALESCE($10, sofa_set),
             refrigerator = COALESCE($11, refrigerator),
-            map_query = COALESCE($12, map_query)
-        WHERE id = $13
-        RETURNING ${COLUMNS}`,
+            map_query = COALESCE($12, map_query),
+            seller_phone = $13
+        WHERE id = $14
+        RETURNING ${ADMIN_COLUMNS}`,
         [
             p.title, p.type, p.price, p.location, p.bedrooms, p.bathrooms,
             p.lotArea, p.floorArea, p.bedFrame, p.sofaSet, p.refrigerator, p.mapQuery,
+            p.sellerPhone,
             req.params.id,
         ]
     )
@@ -142,7 +144,7 @@ app.post('/api/properties/:id/photos', requireAdmin, upload.array('photos', 10),
             images = COALESCE(images, '{}') || $1::text[],
             thumbnail = COALESCE(thumbnail, $2)
         WHERE id = $3
-        RETURNING ${COLUMNS}`,
+        RETURNING ${ADMIN_COLUMNS}`,
         [urls, urls[0], id]
     )
 
@@ -174,7 +176,7 @@ app.delete('/api/properties/:id/photos', requireAdmin, async (req, res) => {
     const result = await pool.query(
         `UPDATE properties SET images = $1, thumbnail = $2
         WHERE id = $3
-        RETURNING ${COLUMNS}`,
+        RETURNING ${ADMIN_COLUMNS}`,
         [remaining, newThumbnail, id]
     )
 
@@ -189,7 +191,7 @@ app.put('/api/properties/:id/cover', requireAdmin, async (req, res) => {
     const result = await pool.query(
         `UPDATE properties SET thumbnail = $1
         WHERE id = $2 AND $1 = ANY(images)
-        RETURNING ${COLUMNS}`,
+        RETURNING ${ADMIN_COLUMNS}`,
         [req.body.url, req.params.id]
     )
 
@@ -231,6 +233,11 @@ app.get('/api/admin/check', requireAdmin, (req, res) => {
     res.json({ message: 'You are admin', adminId: req.adminId })
 })
 
+app.get('/api/admin/properties', requireAdmin, async (req, res) => {
+    const result = await pool.query(`SELECT ${ADMIN_COLUMNS} FROM properties`)
+    res.json(result.rows)
+})
+
 app.listen(PORT, ()=> {
     console.log(`Server running on http://localhost:${PORT}`)
 })
@@ -241,3 +248,5 @@ const COLUMNS = `
     bed_frame AS "bedFrame", sofa_set AS "sofaSet", refrigerator,
     thumbnail, images
 `
+
+const ADMIN_COLUMNS = `${COLUMNS}, seller_phone AS "sellerPhone"`

@@ -4,7 +4,7 @@ import './Admin.css'
 
  const emptyForm = {
     title: '', type: 'sale', price: '', location: '',
-    bedrooms: '', bathrooms: '', lotArea: '', floorArea: '',
+    bedrooms: '', bathrooms: '', lotArea: '', floorArea: '',  sellerPhone: '',
 }
 
 function Admin() {
@@ -18,7 +18,15 @@ function Admin() {
 
     useEffect(() => {
         async function loadProperties() {
-            const res = await fetch('/api/properties')
+            const res = await fetch('/api/admin/properties', {
+                headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+            })
+
+            if (!res.ok) {
+                navigate('/admin/login')
+                return
+            }
+
             const data = await res.json()
             setProperties(data)
         }
@@ -61,6 +69,7 @@ function Admin() {
             bathrooms: p.bathrooms ?? '',
             lotArea: p.lotArea ?? '',
             floorArea: p.floorArea ?? '',
+            sellerPhone: p.sellerPhone ?? '',
         })
         setShowForm(true)
     }
@@ -126,6 +135,7 @@ function Admin() {
             price: Number(form.price),
             bedrooms: form.bedrooms ? Number(form.bedrooms) : null,
             bathrooms: form.bathrooms ? Number(form.bathrooms) : null,
+            sellerPhone: form.sellerPhone || null,
         }
 
         const url = editingId ? `/api/properties/${editingId}` : '/api/properties'
@@ -230,6 +240,10 @@ function Admin() {
                             <div className="field">
                                 <label htmlFor="floorArea">Floor area</label>
                                 <input id="floorArea" name="floorArea" value={form.floorArea} onChange={handleChange} />
+                            </div>
+                            <div className="field field--wide">
+                                <label htmlFor="sellerPhone">Seller number (private)</label>
+                                <input id="sellerPhone" name="sellerPhone" value={form.sellerPhone} onChange={handleChange} />
                             </div>
                             {editing && editing.images?.length > 0 && (
                                 <div className="field--wide photo-grid">
