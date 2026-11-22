@@ -1,0 +1,53 @@
+.filters {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 16px;
+    margin-bottom: 28px;
+}
+
+.filters__field {
+    display: grid;
+    gap: 6px;
+    width: min(260px, 100%);
+}
+
+.filters__field label {
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.filters__field select {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    background: #fff;
+    font: inherit;
+    /* long text is cut with "..." in the closed box */
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* long options wrap inside the open list (browsers that allow it) */
+.filters__field select option {
+    white-space: normal;
+}
+
+.filters__count {
+    margin-left: auto;
+    align-self: center;
+    color: var(--color-text-soft);
+    font-size: 0.9rem;
+}
+
+@media (max-width: 600px) {
+    .filters__field {
+        width: 100%;
+    }
+
+    .filters__count {
+        margin-left: 0;
+    }
+}
