@@ -1,13 +1,17 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router'
-import './Admin.css'
+import Pagination from '../components/Pagination.jsx'
+import { clearPropertyCache } from '../data/propertyCache.js'
+import './AdminLayout.css'
+
+const LIST_PAGE_SIZE = 8
 
  const emptyForm = {
     title: '', type: 'sale', price: '', location: '',
     bedrooms: '', bathrooms: '', lotArea: '', floorArea: '',  sellerPhone: '',
 }
 
-function Admin() {
+function AdminListings() {
     const navigate = useNavigate()
     const [properties, setProperties] = useState([])
     const [form, setForm] = useState(emptyForm)
@@ -15,6 +19,8 @@ function Admin() {
     const [showForm, setShowForm] = useState(false)
     const [files, setFiles] = useState([])
     const [fileKey, setFileKey] = useState(0)
+    const [typeFilter, setTypeFilter] = useState('all')
+    const [listPage, setListPage] = useState(1)
 
     useEffect(() => {
         async function loadProperties() {
@@ -33,11 +39,6 @@ function Admin() {
         loadProperties()
     }, [])
 
-    function handleLogout() {
-        localStorage.removeItem('token')
-        navigate('/admin/login')
-    }
-
     async function handleDelete(id) {
         if (!confirm('Delete this listing? This cannot be undone.')) return
 
@@ -51,6 +52,7 @@ function Admin() {
             return
         }
 
+        clearPropertyCache()
         setProperties(properties.filter((p) => p.id !== id))
     }
 
@@ -87,6 +89,7 @@ function Admin() {
     }
 
     function replaceProperty(updated) {
+      clearPropertyCache()
       setProperties(properties.map((p) => (p.id === updated.id ? updated : p)))
     }
 
@@ -176,6 +179,8 @@ function Admin() {
             }
         }
 
+        clearPropertyCache()
+
         if (editingId) {
             setProperties(properties.map((p) => (p.id === editingId ? saved : p)))
         } else {
@@ -192,14 +197,23 @@ function Admin() {
 
     const editing = properties.find((p) => p.id === editingId)
 
-    return (
-        <section className="section">
-            <div className="container">
-                <div className="admin__header">
-                    <h1>Admin</h1>
-                    <button onClick={handleLogout} className="btn btn--outline">Log out</button>
-                </div>
+    const filteredProperties = typeFilter === 'all'
+        ? properties
+        : properties.filter((p) => p.type === typeFilter)
+    const listTotalPages = Math.max(1, Math.ceil(filteredProperties.length / LIST_PAGE_SIZE))
+    const currentListPage = Math.min(listPage, listTotalPages)
+    const visibleProperties = filteredProperties.slice(
+        (currentListPage - 1) * LIST_PAGE_SIZE,
+        currentListPage * LIST_PAGE_SIZE
+    )
 
+    function changeFilter(value) {
+        setTypeFilter(value)
+        setListPage(1)
+    }
+
+    return (
+        <div>
                 {showForm && (
                 <>
                     <div className="modal__backdrop" onClick={handleCancel}></div>
@@ -288,8 +302,21 @@ function Admin() {
                     <h2>Listings</h2>
                     <button onClick={handleAdd} className="btn btn--primary">+ Add listing</button>
                 </div>
+                <div className="admin__filters">
+                    {[['all', 'All'], ['sale', 'For sale'], ['rent', 'For rent']].map(([value, label]) => (
+                        <button
+                            key={value}
+                            type="button"
+                            onClick={() => changeFilter(value)}
+                            className={typeFilter === value ? 'btn btn--primary' : 'btn btn--outline'}
+                        >
+                            {label}
+                        </button>
+                    ))}
+                </div>
+                {filteredProperties.length === 0 && <p className="admin__empty">No listings found.</p>}
                 <ul className="admin__list">
-                    {properties.map((p) => (
+                    {visibleProperties.map((p) => (
                         <li key={p.id} className="admin__row">
                             <div className="admin__info">
                                 {p.thumbnail && <img src={p.thumbnail} alt="" className="admin__thumb" />}
@@ -307,9 +334,9 @@ function Admin() {
                         </li>
                     ))}
                 </ul>
-            </div>
-        </section>
+                <Pagination page={currentListPage} totalPages={listTotalPages} onChange={setListPage} />
+        </div>
     )
-  }
+}
 
-  export default Admin
+export default AdminListings
