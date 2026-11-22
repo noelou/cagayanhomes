@@ -68,7 +68,11 @@ function PropertyDetails() {
         )
     }
 
-    const mapQuery = property.mapQuery || property.location
+    // Exact pin when the listing has coordinates; otherwise search by the location text.
+    const hasCoords = property.latitude != null && property.longitude != null
+    const mapQuery = hasCoords
+        ? `${property.latitude},${property.longitude}`
+        : property.mapQuery || property.location
 
     return (
         <section className="section">

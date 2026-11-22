@@ -8,7 +8,18 @@ const LIST_PAGE_SIZE = 8
 
  const emptyForm = {
     title: '', type: 'sale', price: '', location: '',
-    bedrooms: '', bathrooms: '', lotArea: '', floorArea: '',  sellerPhone: '',
+    bedrooms: '', bathrooms: '', lotArea: '', floorArea: '',  sellerPhone: '', coords: '',
+}
+
+// Reads "8.4542, 124.6319" (as copied from Google Maps) into two numbers.
+// Returns null if the text is not valid coordinates.
+function parseCoords(text) {
+    const match = text.trim().match(/^(-?\d+(?:\.\d+)?)\s*[,\s]\s*(-?\d+(?:\.\d+)?)$/)
+    if (!match) return null
+    const latitude = Number(match[1])
+    const longitude = Number(match[2])
+    if (Math.abs(latitude) > 90 || Math.abs(longitude) > 180) return null
+    return { latitude, longitude }
 }
 
 function AdminListings() {
@@ -72,6 +83,7 @@ function AdminListings() {
             lotArea: p.lotArea ?? '',
             floorArea: p.floorArea ?? '',
             sellerPhone: p.sellerPhone ?? '',
+            coords: p.latitude != null && p.longitude != null ? `${p.latitude}, ${p.longitude}` : '',
         })
         setShowForm(true)
     }
@@ -133,8 +145,18 @@ function AdminListings() {
     async function handleSubmit(e) {
         e.preventDefault()
 
+        let coordinates = { latitude: null, longitude: null }
+        if (form.coords.trim()) {
+            coordinates = parseCoords(form.coords)
+            if (!coordinates) {
+                alert('Map coordinates should look like: 8.4542, 124.6319 (latitude, longitude).')
+                return
+            }
+        }
+
         const body = {
             ...form,
+            ...coordinates,
             price: Number(form.price),
             bedrooms: form.bedrooms ? Number(form.bedrooms) : null,
             bathrooms: form.bathrooms ? Number(form.bathrooms) : null,
@@ -237,7 +259,19 @@ function AdminListings() {
                             </div>
                             <div className="field field--wide">
                                 <label htmlFor="location">Location</label>
-                                <input id="location" name="location" value={form.location} onChange={handleChange} required />
+                                <input id="location" name="location" list="location-options" value={form.location} onChange={handleChange} required />
+                                <datalist id="location-options">
+                                    {[...new Set(properties.map((p) => p.location.trim()))].sort().map((loc) => (
+                                        <option key={loc} value={loc} />
+                                    ))}
+                                </datalist>
+                            </div>
+                            <div className="field field--wide">
+                                <label htmlFor="coords">Map coordinates (optional)</label>
+                                <input id="coords" name="coords" placeholder="8.4542, 124.6319" value={form.coords} onChange={handleChange} />
+                                <small className="admin__meta">
+                                    In Google Maps, right-click the exact spot and click the numbers at the top of the menu to copy them, then paste here. Leave empty to search the map by the location text.
+                                </small>
                             </div>
                             <div className="field field--wide">
                                 <label htmlFor="bedrooms">Bedrooms</label>
