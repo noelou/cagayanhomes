@@ -319,6 +319,83 @@ app.delete('/api/admin/inquiries/:id', requireAdmin, async (req, res) => {
     res.json({ message: 'Deleted', id: result.rows[0].id })
 })
 
+// ---- Editable site content (agent info, hero, about, testimonials ...) ----
+const text = (max, min = 1) => ({ kind: 'string', max, min })
+const obj = (fields) => ({ kind: 'object', fields })
+const list = (item, max) => ({ kind: 'array', item, max })
+
+const CONTENT_SPECS = {
+    agent: obj({ name: text(100), email: text(200), phoneDisplay: text(40), location: text(200) }),
+    hero: obj({ title: text(150), text: text(600) }),
+    why: obj({
+        title: text(100),
+        text: text(600),
+        reasons: list(obj({ title: text(100), text: text(400) }), 8),
+    }),
+    about: obj({ text: text(4000) }),
+    buy: obj({ title: text(100), subtitle: text(300) }),
+    rent: obj({ title: text(100), subtitle: text(300) }),
+    testimonials: list(obj({ name: text(100), detail: text(200, 0), quote: text(800) }), 12),
+}
+
+function cleanValue(spec, v) {
+    if (spec.kind === 'string') {
+        if (typeof v !== 'string') return undefined
+        const s = v.trim()
+        if (s.length < spec.min || s.length > spec.max) return undefined
+        return s
+    }
+    if (spec.kind === 'object') {
+        if (!v || typeof v !== 'object' || Array.isArray(v)) return undefined
+        const out = {}
+        for (const [k, s] of Object.entries(spec.fields)) {
+            const c = cleanValue(s, v[k])
+            if (c === undefined) return undefined
+            out[k] = c
+        }
+        return out
+    }
+    if (!Array.isArray(v) || v.length > spec.max) return undefined
+    const out = []
+    for (const item of v) {
+        const c = cleanValue(spec.item, item)
+        if (c === undefined) return undefined
+        out.push(c)
+    }
+    return out
+}
+
+app.get('/api/content', async (req, res) => {
+    const result = await pool.query('SELECT key, value FROM site_content')
+    const content = {}
+    for (const row of result.rows) content[row.key] = row.value
+    res.json(content)
+})
+
+app.put('/api/admin/content/:key', requireAdmin, async (req, res) => {
+    const spec = Object.hasOwn(CONTENT_SPECS, req.params.key) ? CONTENT_SPECS[req.params.key] : null
+    if (!spec) {
+        return res.status(404).json({ message: 'Unknown content section' })
+    }
+
+    const value = cleanValue(spec, req.body?.value)
+    if (value === undefined) {
+        return res.status(400).json({ message: 'Some fields are empty or too long' })
+    }
+
+    if (req.params.key === 'agent' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.email)) {
+        return res.status(400).json({ message: 'Please enter a valid email' })
+    }
+
+    await pool.query(
+        `INSERT INTO site_content (key, value) VALUES ($1, $2::jsonb)
+        ON CONFLICT (key) DO UPDATE SET value = $2::jsonb, updated_at = NOW()`,
+        [req.params.key, JSON.stringify(value)]
+    )
+
+    res.json(value)
+})
+
 app.listen(PORT, ()=> {
     console.log(`Server running on http://localhost:${PORT}`)
 })
