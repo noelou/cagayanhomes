@@ -128,6 +128,8 @@ function ContentForm({ initial, setSection }) {
             >
                 <Input label="Headline" value={draft.hero.title} onChange={(v) => setField('hero', 'title', v)} />
                 <Input label="Text under the headline" rows={4} value={draft.hero.text} onChange={(v) => setField('hero', 'text', v)} />
+                <Input label={'"I\'m Selling" button link (e.g. a Google Drive link)'} value={draft.hero.sellingLink} onChange={(v) => setField('hero', 'sellingLink', v)} />
+                <p className="admin__meta">The "I'm Selling" button always shows. Until a link is saved here, clicking it does nothing. The link opens in a new tab.</p>
             </Section>
 
             <Section

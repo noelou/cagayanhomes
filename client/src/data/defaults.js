@@ -9,6 +9,7 @@ export const defaultContent = {
   hero: {
     title: "Find a Place You'll Love to Call Home.",
     text: "Buying or selling a home can feel overwhelming. I'm here to make it easier, from finding the right property to negotiating and completing the paperwork.",
+    sellingLink: '', // link for the "I'm Selling" button; empty = button does nothing yet
   },
   why: {
     title: 'Why Work With Me?',

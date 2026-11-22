@@ -11,7 +11,14 @@ function Hero() {
                 <p>{content.hero.text}</p>
                 <div className="hero__actions">
                     <a href="/buy" className="btn btn--light">I'm Buying</a>
-                    <a href="/contact" className="btn btn--outline-light">I'm Selling</a>
+                    <a
+                        href={content.hero.sellingLink || undefined}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="btn btn--outline-light"
+                    >
+                        I'm Selling
+                    </a>
                 </div>
             </div>
         </section>

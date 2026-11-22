@@ -17,7 +17,14 @@ export function ContentProvider({ children }) {
                 const res = await fetch('/api/content')
                 if (res.ok) {
                     const saved = await res.json()
-                    setContent({ ...defaultContent, ...saved })
+                    // Merge section by section, so a newly added field keeps its default
+                    // even if an older saved version of that section does not have it.
+                    const merged = { ...defaultContent }
+                    for (const key of Object.keys(saved)) {
+                        const isObject = saved[key] && typeof saved[key] === 'object' && !Array.isArray(saved[key])
+                        merged[key] = isObject ? { ...defaultContent[key], ...saved[key] } : saved[key]
+                    }
+                    setContent(merged)
                 }
             } catch {
                 // keep the defaults if the server can't be reached
