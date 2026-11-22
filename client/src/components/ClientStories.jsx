@@ -1,8 +1,13 @@
 import TestimonialCard from "./TestimonialCard.jsx"
-import { testimonials } from "../data/testimonials"
+import { useContent } from './ContentProvider.jsx'
 import './ClientStories.css'
 
 function ClientStories() {
+    const { content } = useContent()
+    const testimonials = content.testimonials
+
+    if (testimonials.length === 0) return null
+
     return (
         <section className="section">
             <div className="container">
@@ -11,7 +16,7 @@ function ClientStories() {
                 </div>
                 <div className="grid grid--3">
                     {testimonials.map((t) => (
-                        <TestimonialCard key={t.name} name={t.name} detail={t.detail} quote={t.quote} />
+                        <TestimonialCard key={`${t.name}-${t.quote}`} name={t.name} detail={t.detail} quote={t.quote} />
                     ))}
                 </div>
             </div>

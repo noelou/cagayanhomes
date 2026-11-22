@@ -29,9 +29,8 @@ function Header() {
                     <NavLink to="/buy">Buy</NavLink>
                     <NavLink to="/rent">Rent</NavLink>
                     <NavLink to="/about">About Me</NavLink>
-                    <NavLink to="/contact">Contact</NavLink>
                     <Link to="/contact" className="navbar__cta">
-                        Book a Call
+                        Contact Us
                     </Link>
                 </nav>
             </div>

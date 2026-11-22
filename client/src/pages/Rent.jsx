@@ -1,14 +1,13 @@
 import Listings from '../components/Listings.jsx'
 import ClientStories from '../components/ClientStories.jsx'
+import { useContent } from '../components/ContentProvider.jsx'
 
 function Rent() {
+    const { rent } = useContent().content
+
     return (
         <>
-            <Listings
-                type="rent"
-                title="Properties for Rent"
-                subtitle="Browse homes and lots available for purchase in Cagayan de Oro."
-            />
+            <Listings type="rent" title={rent.title} subtitle={rent.subtitle} />
             <ClientStories />
         </>
     )

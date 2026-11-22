@@ -18,16 +18,9 @@
   font-size: 1.05rem;
 }
 
-.about__contact {
-  list-style: none;
-  margin: 24px 0 0;
-  padding: 0;
-  display: grid;
-  gap: 8px;
-}
-
-.about__contact a {
-  color: var(--color-green);
+.about__cta {
+  margin-top: 24px;
+  display: inline-block;
 }
 
 @media (max-width: 768px) {

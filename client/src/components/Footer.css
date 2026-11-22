@@ -40,6 +40,10 @@
     margin: 0;
 }
 
+.footer__btn {
+    align-self: flex-start;
+}
+
 .footer__item svg {
     flex-shrink: 0;
     width: 18px;
