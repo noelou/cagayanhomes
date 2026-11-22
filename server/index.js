@@ -3,6 +3,7 @@ import sharp from 'sharp'
 import fs from 'node:fs/promises'
 import requireAdmin from './auth.js'
 import express from 'express'
+import rateLimit from 'express-rate-limit'
 import pool from './db.js'
 import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
@@ -236,6 +237,86 @@ app.get('/api/admin/check', requireAdmin, (req, res) => {
 app.get('/api/admin/properties', requireAdmin, async (req, res) => {
     const result = await pool.query(`SELECT ${ADMIN_COLUMNS} FROM properties`)
     res.json(result.rows)
+})
+
+const inquiryLimiter = rateLimit({
+    windowMs: 60 * 60 * 1000,
+    limit: 5,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { message: 'Too many messages. Please try again later.' },
+})
+
+app.post('/api/inquiries', inquiryLimiter, async (req, res) => {
+    const { name, email, phone, message, propertyId, website } = req.body ?? {}
+
+    // Honeypot: real users never fill this hidden field. Pretend success, save nothing.
+    if (website) {
+        return res.status(201).json({ message: 'Sent' })
+    }
+
+    const isStr = (v) => typeof v === 'string'
+    if (!isStr(name) || !isStr(email) || !isStr(message) ||
+        (phone != null && !isStr(phone)) || (propertyId != null && !isStr(propertyId))) {
+        return res.status(400).json({ message: 'Invalid input' })
+    }
+
+    const n = name.trim()
+    const e = email.trim()
+    const m = message.trim()
+    const ph = phone ? phone.trim() : null
+
+    if (!n || !e || !m) {
+        return res.status(400).json({ message: 'Name, email and message are required' })
+    }
+    if (n.length > 100 || e.length > 200 || m.length > 2000 || (ph && ph.length > 30)) {
+        return res.status(400).json({ message: 'One of the fields is too long' })
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)) {
+        return res.status(400).json({ message: 'Please enter a valid email' })
+    }
+
+    await pool.query(
+        `INSERT INTO inquiries (name, email, phone, message, property_id)
+        VALUES ($1, $2, $3, $4, (SELECT id FROM properties WHERE id = $5))`,
+        [n, e, ph || null, m, propertyId || null]
+    )
+
+    res.status(201).json({ message: 'Sent' })
+})
+
+app.get('/api/admin/inquiries', requireAdmin, async (req, res) => {
+    const result = await pool.query(
+        `SELECT i.id, i.name, i.email, i.phone, i.message, i.is_read AS "isRead",
+            i.created_at AS "createdAt", i.property_id AS "propertyId", p.title AS "propertyTitle"
+        FROM inquiries i
+        LEFT JOIN properties p ON p.id = i.property_id
+        ORDER BY i.created_at DESC`
+    )
+    res.json(result.rows)
+})
+
+app.put('/api/admin/inquiries/:id/read', requireAdmin, async (req, res) => {
+    const isRead = req.body?.isRead !== false
+    const result = await pool.query(
+        'UPDATE inquiries SET is_read = $1 WHERE id = $2 RETURNING id, is_read AS "isRead"',
+        [isRead, req.params.id]
+    )
+    if (result.rows.length === 0) {
+        return res.status(404).json({ message: 'Inquiry Not Found' })
+    }
+    res.json(result.rows[0])
+})
+
+app.delete('/api/admin/inquiries/:id', requireAdmin, async (req, res) => {
+    const result = await pool.query(
+        'DELETE FROM inquiries WHERE id = $1 RETURNING id',
+        [req.params.id]
+    )
+    if (result.rows.length === 0) {
+        return res.status(404).json({ message: 'Inquiry Not Found' })
+    }
+    res.json({ message: 'Deleted', id: result.rows[0].id })
 })
 
 app.listen(PORT, ()=> {
