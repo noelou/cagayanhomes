@@ -7,10 +7,21 @@ import rateLimit from 'express-rate-limit'
 import pool from './db.js'
 import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
+import path from 'node:path'
+import { existsSync } from 'node:fs'
+import { fileURLToPath } from 'node:url'
 import { randomUUID } from 'node:crypto'
 
+if (!process.env.JWT_SECRET) {
+    console.error('JWT_SECRET is not set. Add it to server/.env before starting.')
+    process.exit(1)
+}
+
+const PORT = process.env.PORT || 5000
+
 const app = express()
-const PORT = 5000
+// Behind Nginx the real visitor IP arrives in X-Forwarded-For; the rate limits need it.
+app.set('trust proxy', 1)
 app.use(express.json())
 app.use('/uploads', express.static('uploads'))
 
@@ -57,6 +68,19 @@ app.delete('/api/properties/:id', requireAdmin, async (req, res) => {
     res.json({ message: 'Deleted', id: result.rows[0].id })
 })
 
+// Reads the map coordinates from a request. Both empty = no pin (fine).
+// Returns null if they are not two valid numbers.
+function readCoords(p) {
+    const blank = (v) => v === null || v === undefined || v === ''
+    if (blank(p.latitude) && blank(p.longitude)) return { lat: null, lng: null }
+    if (blank(p.latitude) || blank(p.longitude)) return null
+
+    const lat = Number(p.latitude)
+    const lng = Number(p.longitude)
+    if (!Number.isFinite(lat) || !Number.isFinite(lng) || Math.abs(lat) > 90 || Math.abs(lng) > 180) return null
+    return { lat, lng }
+}
+
 app.post('/api/properties', requireAdmin, async (req, res) => {
     const p = req.body
 
@@ -64,17 +88,24 @@ app.post('/api/properties', requireAdmin, async (req, res) => {
         return res.status(400).json({ message: 'title, type (sale/rent), price and location are required' })
     }
 
+    const coords = readCoords(p)
+    if (!coords) {
+        return res.status(400).json({ message: 'Map coordinates must be a valid latitude and longitude' })
+    }
+
     const id = randomUUID()
 
     const result = await pool.query(
         `INSERT INTO properties
         (id, title, type, price, location, bedrooms, bathrooms,
-            lot_area, floor_area, bed_frame, sofa_set, refrigerator, map_query, seller_phone)
-        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13, $14)
+            lot_area, floor_area, bed_frame, sofa_set, refrigerator, map_query, seller_phone,
+            latitude, longitude)
+        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)
         RETURNING ${ADMIN_COLUMNS}`,
         [
             id, p.title, p.type, p.price, p.location, p.bedrooms, p.bathrooms,
-            p.lotArea, p.floorArea, p.bedFrame, p.sofaSet, p.refrigerator, p.mapQuery, p.sellerPhone
+            p.lotArea, p.floorArea, p.bedFrame, p.sofaSet, p.refrigerator, p.mapQuery, p.sellerPhone,
+            coords.lat, coords.lng
         ]
     )
 
@@ -88,6 +119,11 @@ app.put('/api/properties/:id', requireAdmin, async (req, res) => {
         return res.status(400).json({ message: 'title, type (sale/rent), price and location are required' })
     }
 
+    const coords = readCoords(p)
+    if (!coords) {
+        return res.status(400).json({ message: 'Map coordinates must be a valid latitude and longitude' })
+    }
+
     const result = await pool.query(
         `UPDATE properties SET
             title = $1, type = $2, price = $3, location = $4,
@@ -96,13 +132,16 @@ app.put('/api/properties/:id', requireAdmin, async (req, res) => {
             sofa_set = COALESCE($10, sofa_set),
             refrigerator = COALESCE($11, refrigerator),
             map_query = COALESCE($12, map_query),
-            seller_phone = $13
-        WHERE id = $14
+            seller_phone = $13,
+            latitude = $14,
+            longitude = $15
+        WHERE id = $16
         RETURNING ${ADMIN_COLUMNS}`,
         [
             p.title, p.type, p.price, p.location, p.bedrooms, p.bathrooms,
             p.lotArea, p.floorArea, p.bedFrame, p.sofaSet, p.refrigerator, p.mapQuery,
             p.sellerPhone,
+            coords.lat, coords.lng,
             req.params.id,
         ]
     )
@@ -203,7 +242,15 @@ app.put('/api/properties/:id/cover', requireAdmin, async (req, res) => {
     res.json(result.rows[0])
 })
 
-app.post('/api/login', async (req, res) => {
+const loginLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    limit: 10,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { message: 'Too many login attempts. Please try again in 15 minutes.' },
+})
+
+app.post('/api/login', loginLimiter, async (req, res) => {
     const { email, password } = req.body
 
     const result = await pool.query(
@@ -326,7 +373,7 @@ const list = (item, max) => ({ kind: 'array', item, max })
 
 const CONTENT_SPECS = {
     agent: obj({ name: text(100), email: text(200), phoneDisplay: text(40), location: text(200) }),
-    hero: obj({ title: text(150), text: text(600) }),
+    hero: obj({ title: text(150), text: text(600), sellingLink: text(500, 0) }),
     why: obj({
         title: text(100),
         text: text(600),
@@ -383,6 +430,11 @@ app.put('/api/admin/content/:key', requireAdmin, async (req, res) => {
         return res.status(400).json({ message: 'Some fields are empty or too long' })
     }
 
+    // Only real web links, so nobody can save a javascript: link into the button.
+    if (req.params.key === 'hero' && value.sellingLink && !/^https?:\/\/\S+$/i.test(value.sellingLink)) {
+        return res.status(400).json({ message: 'The link must start with http:// or https://' })
+    }
+
     if (req.params.key === 'agent' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.email)) {
         return res.status(400).json({ message: 'Please enter a valid email' })
     }
@@ -396,6 +448,21 @@ app.put('/api/admin/content/:key', requireAdmin, async (req, res) => {
     res.json(value)
 })
 
+// ---- Serve the built React site (client/dist) from this same server ----
+const clientDist = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'client', 'dist')
+
+// Unknown API or upload URLs get a real 404 instead of the website's index.html.
+app.use('/api', (req, res) => res.status(404).json({ message: 'Not found' }))
+app.use('/uploads', (req, res) => res.status(404).end())
+
+if (existsSync(clientDist)) {
+    app.use(express.static(clientDist))
+    // Lets links like /property/123 and /admin/messages work on a page refresh.
+    app.get('/{*splat}', (req, res) => {
+        res.sendFile(path.join(clientDist, 'index.html'))
+    })
+}
+
 app.listen(PORT, ()=> {
     console.log(`Server running on http://localhost:${PORT}`)
 })
@@ -404,7 +471,7 @@ const COLUMNS = `
     id, title, type, price::float AS price, location, bedrooms, bathrooms,
     lot_area AS "lotArea", floor_area AS "floorArea",
     bed_frame AS "bedFrame", sofa_set AS "sofaSet", refrigerator,
-    thumbnail, images
+    thumbnail, images, latitude, longitude
 `
 
 const ADMIN_COLUMNS = `${COLUMNS}, seller_phone AS "sellerPhone"`

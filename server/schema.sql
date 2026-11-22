@@ -15,7 +15,9 @@ CREATE TABLE properties (
     images      TEXT[] NOT NULL DEFAULT '{}',
     map_query   TEXT,
     created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    seller_phone TEXT
+    seller_phone TEXT,
+    latitude    DOUBLE PRECISION,
+    longitude   DOUBLE PRECISION
 );
 
 CREATE TABLE admins (
