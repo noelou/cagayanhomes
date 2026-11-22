@@ -1,28 +1,50 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router'
 import PropertyGallery from '../components/PropertyGallery.jsx'
+import { getCachedProperty, fetchProperty } from '../data/propertyCache.js'
 import './PropertyDetails.css'
 
 function PropertyDetails() {
     const { id } = useParams()
-    const [property, setProperty] = useState(null)
-    const [loading, setLoading] = useState(true)
+    const [property, setProperty] = useState(() => getCachedProperty(id))
+    const [loading, setLoading] = useState(() => getCachedProperty(id) === null)
     const [notFound, setNotFound] = useState(false)
+    const [error, setError] = useState(false)
 
     useEffect(() => {
         async function loadProperty() {
-            const res = await fetch(`/api/properties/${id}`)
-            if (res.status === 404) {
-                setNotFound(true)
-                setLoading(false)
-                return
+            // show the cached copy right away, then refresh it from the server
+            const cached = getCachedProperty(id)
+            setProperty(cached)
+            setLoading(cached === null)
+            setNotFound(false)
+            setError(false)
+
+            try {
+                const data = await fetchProperty(id)
+                if (data === null) {
+                    setProperty(null)
+                    setNotFound(true)
+                } else {
+                    setProperty(data)
+                }
+            } catch {
+                if (cached === null) setError(true)
             }
-            const data = await res.json()
-            setProperty(data)
             setLoading(false)
         }
         loadProperty()
     }, [id])
+
+    if(error) {
+        return(
+            <section className="section">
+                <div className="container">
+                    <p>Sorry, we couldn't load this property right now. Please try again in a moment.</p>
+                </div>
+            </section>
+        )
+    }
 
     if(loading) {
         return(
@@ -57,6 +79,9 @@ function PropertyDetails() {
                 <p>₱{property.price.toLocaleString()}</p>
                 <p>{property.bedrooms} Beds · {property.bathrooms} Baths</p>
 
+                <Link to={`/contact?property=${property.id}`} className="btn btn--primary no-print">
+                    Inquire about this property
+                </Link>{' '}
                 <button className="btn btn--outline no-print" onClick={() => window.print()}>
                     Print details
                 </button>
