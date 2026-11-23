@@ -1,0 +1,72 @@
+.dropdown {
+    position: relative;
+    width: 100%;
+    min-width: 0;
+}
+
+/* the closed box: one line, long text is cut with "..." before the arrow */
+.dropdown__button {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    overflow: hidden;
+    padding: 10px 40px 10px 12px;
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    background-color: #fff;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%23555' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    background-size: 12px 8px;
+    font: inherit;
+    color: var(--color-text);
+    text-align: left;
+    cursor: pointer;
+}
+
+.dropdown__button:focus-visible {
+    outline: 2px solid var(--color-gold-soft);
+    border-color: var(--color-gold);
+}
+
+.dropdown__value {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* the open list: same width as the box, long options wrap onto more lines */
+.dropdown__list {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    z-index: 30;
+    width: 100%;
+    max-height: 280px;
+    margin: 0;
+    padding: 4px;
+    overflow-y: auto;
+    list-style: none;
+    background: #fff;
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.dropdown__option {
+    padding: 9px 10px;
+    border-radius: 6px;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    line-height: 1.35;
+    cursor: pointer;
+}
+
+.dropdown__option--active {
+    background: #f1ede6;
+}
+
+.dropdown__option--selected {
+    font-weight: 600;
+}

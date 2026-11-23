@@ -132,12 +132,14 @@ function PropertyDetails() {
                     </div>
                 )}
 
-                <button className="btn btn--primary no-print" onClick={() => setShowInquiry(true)}>
-                    Inquire about this property
-                </button>{' '}
-                <button className="btn btn--outline no-print" onClick={() => window.print()}>
-                    Print details
-                </button>
+                <div className="details__actions no-print">
+                    <button className="btn btn--primary" onClick={() => setShowInquiry(true)}>
+                        Inquire about this property
+                    </button>
+                    <button className="btn btn--outline" onClick={() => window.print()}>
+                        Print details
+                    </button>
+                </div>
 
                 {mapQuery && (
                     <div className="details__map no-print">

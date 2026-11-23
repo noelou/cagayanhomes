@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import PropertyCard from './PropertyCard.jsx'
 import Pagination from './Pagination.jsx'
+import Dropdown from './Dropdown.jsx'
 import { getCachedList, fetchList } from '../data/propertyCache.js'
 import './Listings.css'
 
@@ -62,6 +63,15 @@ function Listings({ type, title, subtitle }) {
     const activeBudget = budget === 'any' ? null : budgetOptions[Number(budget)]
     const activeLocation = locationMap.has(location) ? location : 'all'
 
+    const budgetChoices = [
+        { value: 'any', label: 'Any budget' },
+        ...budgetOptions.map((o, i) => ({ value: String(i), label: o.label })),
+    ]
+    const locationChoices = [
+        { value: 'all', label: 'All locations' },
+        ...locations.map(([key, label]) => ({ value: key, label })),
+    ]
+
     const filtered = ofThisType.filter((p) => {
         if (activeBudget) {
             if (activeBudget.min !== undefined && !(p.price > activeBudget.min)) return false
@@ -109,21 +119,11 @@ function Listings({ type, title, subtitle }) {
                     <div className="filters">
                         <div className="filters__field">
                             <label htmlFor="filter-budget">Budget</label>
-                            <select id="filter-budget" value={budget} onChange={(e) => changeBudget(e.target.value)}>
-                                <option value="any">Any budget</option>
-                                {budgetOptions.map((o, i) => (
-                                    <option key={o.label} value={i}>{o.label}</option>
-                                ))}
-                            </select>
+                            <Dropdown id="filter-budget" value={budget} options={budgetChoices} onChange={changeBudget} />
                         </div>
-                        <div className="filters__field">
+                        <div className="filters__field filters__field--wide">
                             <label htmlFor="filter-location">Location</label>
-                            <select id="filter-location" value={activeLocation} onChange={(e) => changeLocation(e.target.value)}>
-                                <option value="all">All locations</option>
-                                {locations.map(([key, label]) => (
-                                    <option key={key} value={key}>{label}</option>
-                                ))}
-                            </select>
+                            <Dropdown id="filter-location" value={activeLocation} options={locationChoices} onChange={changeLocation} />
                         </div>
                         {isFiltering && (
                             <button type="button" className="btn btn--outline" onClick={clearFilters}>

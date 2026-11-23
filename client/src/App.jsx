@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { Routes, Route, Navigate, useLocation } from 'react-router'
 import Header from './components/Header.jsx'
 import Footer from './components/Footer.jsx'
@@ -17,6 +18,11 @@ import ProtectedRoute from './components/ProtectedRoute.jsx'
 function App() {
   const { pathname } = useLocation()
   const isAdmin = pathname.startsWith('/admin')
+
+  // Every time the user goes to a different page, start at the top.
+  useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [pathname])
 
   return (
     <>

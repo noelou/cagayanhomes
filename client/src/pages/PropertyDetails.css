@@ -28,6 +28,19 @@
     white-space: pre-line;
 }
 
+.details__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 16px;
+}
+
+@media (max-width: 480px) {
+    .details__actions .btn {
+        flex: 1 1 100%;
+    }
+}
+
 .details__map {
     margin-top: 24px;
     border-radius: 14px;
