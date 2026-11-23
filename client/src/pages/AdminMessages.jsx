@@ -60,7 +60,9 @@ function AdminMessages() {
                                 <a href={`mailto:${i.email}`}>{i.email}</a>
                                 {i.phone && <> · <a href={`tel:${i.phone}`}>{i.phone}</a></>}
                                 {' · '}{new Date(i.createdAt).toLocaleString()}
-                                {i.propertyTitle && <> · re: {i.propertyTitle}</>}
+                                {i.propertyId && i.propertyTitle && (
+                                    <> · re: <a href={`/property/${i.propertyId}`} target="_blank" rel="noreferrer">{i.propertyTitle}</a></>
+                                )}
                             </span>
                             <p className="admin__message">{i.message}</p>
                         </div>

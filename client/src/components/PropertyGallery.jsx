@@ -10,6 +10,19 @@ function PropertyGallery({ images, title }) {
                 <img src={images[current]} alt={`${title} photo ${current + 1}`} />
             </div>
 
+            {images.length > 0 && (
+                <div className="gallery__print">
+                    <img className="gallery__print-hero" src={images[0]} alt={`${title} cover photo`} />
+                    {images.length > 1 && (
+                        <div className="gallery__print-grid">
+                            {images.slice(1, 7).map((src, index) => (
+                                <img key={src} src={src} alt={`${title} photo ${index + 2}`} />
+                            ))}
+                        </div>
+                    )}
+                </div>
+            )}
+
             <div className="gallery__thumbs">
                 {images.map((src, index) => (
                     <button

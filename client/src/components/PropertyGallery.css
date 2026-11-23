@@ -46,3 +46,41 @@
     border-color: var(--color-navy);
     opacity: 1;
 }
+
+/* Collage used only when printing: big cover photo, the rest in a grid below. */
+.gallery__print {
+    display: none;
+}
+
+@media print {
+    .gallery__main {
+        display: none;
+    }
+
+    .gallery__print {
+        display: block;
+        break-inside: avoid;
+    }
+
+    .gallery__print img {
+        display: block;
+        width: 100%;
+        object-fit: cover;
+        border-radius: 6px;
+    }
+
+    .gallery__print-hero {
+        aspect-ratio: 16 / 9;
+    }
+
+    .gallery__print-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 6px;
+        margin-top: 6px;
+    }
+
+    .gallery__print-grid img {
+        aspect-ratio: 4 / 3;
+    }
+}

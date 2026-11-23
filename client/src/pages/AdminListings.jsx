@@ -6,9 +6,14 @@ import './AdminLayout.css'
 
 const LIST_PAGE_SIZE = 8
 
+const DEFAULT_PAYMENT_NOTE = 'The title/papers will only be released once the property is fully paid.'
+
  const emptyForm = {
     title: '', type: 'sale', price: '', location: '',
     bedrooms: '', bathrooms: '', lotArea: '', floorArea: '',  sellerPhone: '', coords: '',
+    ownershipStatus: '', availability: '', paymentTerms: '',
+    downpayment: '', monthlyPayment: '', paymentNote: DEFAULT_PAYMENT_NOTE,
+    financing: '', requirements: '', amenities: '',
 }
 
 // Reads "8.4542, 124.6319" (as copied from Google Maps) into two numbers.
@@ -84,6 +89,15 @@ function AdminListings() {
             floorArea: p.floorArea ?? '',
             sellerPhone: p.sellerPhone ?? '',
             coords: p.latitude != null && p.longitude != null ? `${p.latitude}, ${p.longitude}` : '',
+            ownershipStatus: p.ownershipStatus ?? '',
+            availability: p.availability ?? '',
+            paymentTerms: p.paymentTerms ?? '',
+            downpayment: p.downpayment ?? '',
+            monthlyPayment: p.monthlyPayment ?? '',
+            paymentNote: p.paymentNote ?? DEFAULT_PAYMENT_NOTE,
+            financing: p.financing === true ? 'yes' : p.financing === false ? 'no' : '',
+            requirements: p.requirements ?? '',
+            amenities: p.amenities ?? '',
         })
         setShowForm(true)
     }
@@ -161,6 +175,9 @@ function AdminListings() {
             bedrooms: form.bedrooms ? Number(form.bedrooms) : null,
             bathrooms: form.bathrooms ? Number(form.bathrooms) : null,
             sellerPhone: form.sellerPhone || null,
+            downpayment: form.downpayment === '' ? null : Number(form.downpayment),
+            monthlyPayment: form.monthlyPayment === '' ? null : Number(form.monthlyPayment),
+            financing: form.financing === '' ? null : form.financing === 'yes',
         }
 
         const url = editingId ? `/api/properties/${editingId}` : '/api/properties'
@@ -293,6 +310,67 @@ function AdminListings() {
                                 <label htmlFor="sellerPhone">Seller number (private)</label>
                                 <input id="sellerPhone" name="sellerPhone" value={form.sellerPhone} onChange={handleChange} />
                             </div>
+                            {form.type === 'sale' && (
+                                <>
+                                    <div className="field field--wide">
+                                        <label htmlFor="ownershipStatus">Ownership status</label>
+                                        <select id="ownershipStatus" name="ownershipStatus" value={form.ownershipStatus} onChange={handleChange}>
+                                            <option value="">Not set</option>
+                                            <option value="clean_title">Clean title</option>
+                                            <option value="mortgage">Mortgage</option>
+                                        </select>
+                                    </div>
+                                    <div className="field field--wide">
+                                        <label htmlFor="availability">Availability</label>
+                                        <select id="availability" name="availability" value={form.availability} onChange={handleChange}>
+                                            <option value="">Not set</option>
+                                            <option value="available">Available</option>
+                                            <option value="reserved">Reserved</option>
+                                            <option value="sold">Sold</option>
+                                        </select>
+                                    </div>
+                                    <div className="field field--wide">
+                                        <label htmlFor="paymentTerms">Payment terms</label>
+                                        <select id="paymentTerms" name="paymentTerms" value={form.paymentTerms} onChange={handleChange}>
+                                            <option value="">Not set</option>
+                                            <option value="cash">Cash</option>
+                                            <option value="installment">Installment</option>
+                                        </select>
+                                    </div>
+                                    {form.paymentTerms === 'installment' && (
+                                        <>
+                                            <div className="field field--wide">
+                                                <label htmlFor="downpayment">Downpayment (₱)</label>
+                                                <input id="downpayment" type="number" min="0" name="downpayment" value={form.downpayment} onChange={handleChange} />
+                                            </div>
+                                            <div className="field field--wide">
+                                                <label htmlFor="monthlyPayment">Per month (₱)</label>
+                                                <input id="monthlyPayment" type="number" min="0" name="monthlyPayment" value={form.monthlyPayment} onChange={handleChange} />
+                                            </div>
+                                            <div className="field field--wide">
+                                                <label htmlFor="paymentNote">Payment note</label>
+                                                <textarea id="paymentNote" name="paymentNote" rows="2" value={form.paymentNote} onChange={handleChange}></textarea>
+                                            </div>
+                                        </>
+                                    )}
+                                    <div className="field field--wide">
+                                        <label htmlFor="financing">Financing</label>
+                                        <select id="financing" name="financing" value={form.financing} onChange={handleChange}>
+                                            <option value="">Not set</option>
+                                            <option value="yes">Yes</option>
+                                            <option value="no">No</option>
+                                        </select>
+                                    </div>
+                                    <div className="field field--wide">
+                                        <label htmlFor="requirements">Requirements</label>
+                                        <textarea id="requirements" name="requirements" rows="4" value={form.requirements} onChange={handleChange}></textarea>
+                                    </div>
+                                    <div className="field field--wide">
+                                        <label htmlFor="amenities">Amenities</label>
+                                        <textarea id="amenities" name="amenities" rows="4" value={form.amenities} onChange={handleChange}></textarea>
+                                    </div>
+                                </>
+                            )}
                             {editing && editing.images?.length > 0 && (
                                 <div className="field--wide photo-grid">
                                     {editing.images.map((url) => (

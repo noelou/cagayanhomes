@@ -81,6 +81,54 @@ function readCoords(p) {
     return { lat, lng }
 }
 
+const OWNERSHIP_STATUSES = ['clean_title', 'mortgage']
+const AVAILABILITIES = ['available', 'reserved', 'sold']
+const PAYMENT_TERMS = ['cash', 'installment']
+
+// Reads the "For sale" details. Rentals get all-empty values.
+// Returns null if something is not one of the allowed values.
+function readSaleDetails(p) {
+    if (p.type !== 'sale') {
+        return {
+            ownershipStatus: null, availability: null, paymentTerms: null,
+            downpayment: null, monthlyPayment: null, paymentNote: null,
+            financing: null, requirements: null, amenities: null,
+        }
+    }
+
+    const blank = (v) => v === null || v === undefined || v === ''
+    // undefined = invalid, null = left empty
+    const oneOf = (list, v) => (blank(v) ? null : list.includes(v) ? v : undefined)
+    const money = (v) => {
+        if (blank(v)) return null
+        const n = Number(v)
+        return Number.isFinite(n) && n >= 0 ? n : undefined
+    }
+    const text = (v) => (typeof v === 'string' && v.trim() ? v.trim() : null)
+
+    const d = {
+        ownershipStatus: oneOf(OWNERSHIP_STATUSES, p.ownershipStatus),
+        availability: oneOf(AVAILABILITIES, p.availability),
+        paymentTerms: oneOf(PAYMENT_TERMS, p.paymentTerms),
+        downpayment: money(p.downpayment),
+        monthlyPayment: money(p.monthlyPayment),
+        paymentNote: text(p.paymentNote),
+        financing: typeof p.financing === 'boolean' ? p.financing : null,
+        requirements: text(p.requirements),
+        amenities: text(p.amenities),
+    }
+
+    if (Object.values(d).includes(undefined)) return null
+
+    // installment-only fields mean nothing for a cash deal
+    if (d.paymentTerms !== 'installment') {
+        d.downpayment = null
+        d.monthlyPayment = null
+        d.paymentNote = null
+    }
+    return d
+}
+
 app.post('/api/properties', requireAdmin, async (req, res) => {
     const p = req.body
 
@@ -93,19 +141,29 @@ app.post('/api/properties', requireAdmin, async (req, res) => {
         return res.status(400).json({ message: 'Map coordinates must be a valid latitude and longitude' })
     }
 
+    const sale = readSaleDetails(p)
+    if (!sale) {
+        return res.status(400).json({ message: 'Some of the sale details are not valid' })
+    }
+
     const id = randomUUID()
 
     const result = await pool.query(
         `INSERT INTO properties
         (id, title, type, price, location, bedrooms, bathrooms,
             lot_area, floor_area, bed_frame, sofa_set, refrigerator, map_query, seller_phone,
-            latitude, longitude)
-        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)
+            latitude, longitude,
+            ownership_status, availability, payment_terms, downpayment, monthly_payment,
+            payment_note, financing, requirements, amenities)
+        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,
+            $17,$18,$19,$20,$21,$22,$23,$24,$25)
         RETURNING ${ADMIN_COLUMNS}`,
         [
             id, p.title, p.type, p.price, p.location, p.bedrooms, p.bathrooms,
             p.lotArea, p.floorArea, p.bedFrame, p.sofaSet, p.refrigerator, p.mapQuery, p.sellerPhone,
-            coords.lat, coords.lng
+            coords.lat, coords.lng,
+            sale.ownershipStatus, sale.availability, sale.paymentTerms, sale.downpayment, sale.monthlyPayment,
+            sale.paymentNote, sale.financing, sale.requirements, sale.amenities
         ]
     )
 
@@ -124,6 +182,11 @@ app.put('/api/properties/:id', requireAdmin, async (req, res) => {
         return res.status(400).json({ message: 'Map coordinates must be a valid latitude and longitude' })
     }
 
+    const sale = readSaleDetails(p)
+    if (!sale) {
+        return res.status(400).json({ message: 'Some of the sale details are not valid' })
+    }
+
     const result = await pool.query(
         `UPDATE properties SET
             title = $1, type = $2, price = $3, location = $4,
@@ -134,14 +197,25 @@ app.put('/api/properties/:id', requireAdmin, async (req, res) => {
             map_query = COALESCE($12, map_query),
             seller_phone = $13,
             latitude = $14,
-            longitude = $15
-        WHERE id = $16
+            longitude = $15,
+            ownership_status = $16,
+            availability = $17,
+            payment_terms = $18,
+            downpayment = $19,
+            monthly_payment = $20,
+            payment_note = $21,
+            financing = $22,
+            requirements = $23,
+            amenities = $24
+        WHERE id = $25
         RETURNING ${ADMIN_COLUMNS}`,
         [
             p.title, p.type, p.price, p.location, p.bedrooms, p.bathrooms,
             p.lotArea, p.floorArea, p.bedFrame, p.sofaSet, p.refrigerator, p.mapQuery,
             p.sellerPhone,
             coords.lat, coords.lng,
+            sale.ownershipStatus, sale.availability, sale.paymentTerms, sale.downpayment, sale.monthlyPayment,
+            sale.paymentNote, sale.financing, sale.requirements, sale.amenities,
             req.params.id,
         ]
     )
@@ -471,7 +545,10 @@ const COLUMNS = `
     id, title, type, price::float AS price, location, bedrooms, bathrooms,
     lot_area AS "lotArea", floor_area AS "floorArea",
     bed_frame AS "bedFrame", sofa_set AS "sofaSet", refrigerator,
-    thumbnail, images, latitude, longitude
+    thumbnail, images, latitude, longitude,
+    ownership_status AS "ownershipStatus", availability,
+    payment_terms AS "paymentTerms", downpayment, monthly_payment AS "monthlyPayment",
+    payment_note AS "paymentNote", financing, requirements, amenities
 `
 
 const ADMIN_COLUMNS = `${COLUMNS}, seller_phone AS "sellerPhone"`

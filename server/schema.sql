@@ -17,7 +17,17 @@ CREATE TABLE properties (
     created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     seller_phone TEXT,
     latitude    DOUBLE PRECISION,
-    longitude   DOUBLE PRECISION
+    longitude   DOUBLE PRECISION,
+    -- "For sale" details (all optional; stay empty for rentals)
+    ownership_status TEXT CHECK (ownership_status IN ('clean_title', 'mortgage')),
+    availability     TEXT CHECK (availability IN ('available', 'reserved', 'sold')),
+    payment_terms    TEXT CHECK (payment_terms IN ('cash', 'installment')),
+    downpayment      INTEGER,
+    monthly_payment  INTEGER,
+    payment_note     TEXT,
+    financing        BOOLEAN,
+    requirements     TEXT,
+    amenities        TEXT
 );
 
 CREATE TABLE admins (
